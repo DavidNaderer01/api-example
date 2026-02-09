@@ -15,19 +15,4 @@ public abstract class BaseController<T> : ControllerBase where T : ControllerBas
     {
         _logger = logger;
     }
-
-    protected ErrorResponse GetErrorRequest(string error, string description)
-    {
-        return new ErrorResponse
-        {
-            Error = error,
-            ErrorDescription = description
-        };
-    }
-
-    protected IActionResult GetInternalServerError(string error, string description)
-    {
-        var errorResponse = GetErrorRequest(error, description);
-        return StatusCode(StatusCodes.Status500InternalServerError, errorResponse);
-    }
 }

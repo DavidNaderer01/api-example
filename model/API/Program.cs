@@ -1,3 +1,5 @@
+using API.Configurations;
+using API.Extentions;
 using Keycloak.Configuration;
 using Keycloak.Swagger;
 using Serilog;
@@ -21,9 +23,11 @@ public class Program
         var configuration = builder.Configuration;
         bool isDevelopment = builder.Environment.IsDevelopment();
 
-        AddServices(builder.Services);
-        AddAuthentication(
-            builder.Services, 
+        builder.Services.AddHostServices();
+        builder.Services.AddCustomServices();
+        builder.Services.AddAutoMappers();
+
+        builder.Services.AddJwtAuthentication(
             configuration,
             !isDevelopment
         );
@@ -47,48 +51,5 @@ public class Program
         app.MapControllers();
 
         app.Run();
-    }
-
-    private static void AddAuthentication(
-        IServiceCollection services, 
-        ConfigurationManager configuration,
-        bool requireHttpsMetadata)
-    {
-        try
-        {
-            services.AddKeycloakAuthentication(
-                configuration["Keycloak:Url"] ?? throw new ArgumentNullException(nameof(configuration), "Keycloak:Url is required"),
-                configuration["Keycloak:Realm"] ?? throw new ArgumentNullException(nameof(configuration), "Keycloak:Realm is required"),
-                configuration["Keycloak:ClientId"] ?? throw new ArgumentNullException(nameof(configuration), "Keycloak:ClientId is required"),
-                true,
-                requireHttpsMetadata
-            );
-            
-            Log.Information("Keycloak JWT authentication configured successfully");
-        }
-        catch(Exception ex)
-        {
-            Log.Error(ex, "Error configuring Keycloak authentication");
-            throw;
-        }
-    }
-
-    private static void AddServices(IServiceCollection services)
-    {
-        try
-        {
-            services.AddControllers();
-
-            services.AddEndpointsApiExplorer();
-            services.AddSwaggerJwtSecurityDefinition();
-            services.AddHttpClient();
-            
-            Log.Information("Services added successfully");
-        }
-        catch(Exception ex)
-        {
-            Log.Error(ex, "Error adding services");
-            throw;
-        }  
     }
 }

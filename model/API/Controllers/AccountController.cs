@@ -1,27 +1,36 @@
 using API.Base;
+using AutoMapper;
 using RequestLibrary.Requests;
 using ResponseLibrary.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Text.Json;
+using Services.Account;
+
 namespace API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/accounts")]
 public class AccountController : BaseController<AccountController>
 {
     private readonly IConfiguration _configuration;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IAccountService _service;
+    private readonly IMapper _mapper;
 
     public AccountController(
         ILogger<AccountController> logger,
         IConfiguration configuration,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        IAccountService service,
+        IMapper mapper)
         : base(logger)
     {
         _configuration = configuration;
         _httpClientFactory = httpClientFactory;
+        _service = service;
+        _mapper = mapper;
     }
 
     /// <summary>
@@ -36,27 +45,14 @@ public class AccountController : BaseController<AccountController>
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
-        {
-            return BadRequest(GetErrorRequest("invalid_request", "Username and password are required"));
-        }
-
         try
         {
-            var response = await GetKeycloakRequest(LoginFormData(request));
-            var errorResponse = await GetKeycloakResponse(response);
-            if (errorResponse is not null)
+            var (error, tokenData) = await _service.Login(request);
+            if (error is not null)
             {
-                return errorResponse;
+                Logger.LogWarning("Login failed for user {Username}: {Error}", request.Username, error.ErrorDescription);
+                return BadRequest(error);
             }
-
-            var (result, tokenData) = await Check(response);
-
-            if (result is not null)
-            {
-                return result;
-            }
-
             Logger.LogInformation("User {Username} logged in successfully", request.Username);
 
             return Ok(tokenData);
@@ -64,7 +60,10 @@ public class AccountController : BaseController<AccountController>
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error during login for user {Username}", request.Username);
-            return GetInternalServerError("server_error", "An error occurred during login");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError, 
+                _service.GetErrorRequest("server_error", "An error occurred during login")
+            );
         }
     }
 
@@ -80,26 +79,14 @@ public class AccountController : BaseController<AccountController>
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.RefreshToken))
-        {
-            return BadRequest(GetErrorRequest("invalid_request", "Refresh token is required"));
-        }
-
         try
         {
-            var response = await GetKeycloakRequest(RefreshTokenFormData(request));
-            var errorResponse = await GetRefreshTokenResponse(response);
-            if (errorResponse is not null)
+            var (error, tokenData) = await _service.RefreshToken(request);
+            if (error is not null)
             {
-                return errorResponse;
+                Logger.LogWarning("Token refresh failed: {Error}", error.ErrorDescription);
+                return BadRequest(error);
             }
-
-            var (result, tokenData) = await Check(response);
-            if (result is not null)
-            {
-                return result;
-            }
-
             Logger.LogInformation("Token refreshed successfully");
 
             return Ok(tokenData);
@@ -107,7 +94,10 @@ public class AccountController : BaseController<AccountController>
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error during token refresh");
-            return GetInternalServerError("server_error", "An error occurred during token refresh");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError, 
+                _service.GetErrorRequest("server_error", "An error occurred during token refresh")
+            );
         }
     }
 
@@ -121,199 +111,11 @@ public class AccountController : BaseController<AccountController>
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetCurrentUser()
     {   
-        var userInfo = new UserInfoResponse
-        {
-            Username = User.Identity?.Name ?? string.Empty,
-            IsAuthenticated = User.Identity?.IsAuthenticated ?? false,
-            AuthenticationType = User.Identity?.AuthenticationType ?? string.Empty,
-            Email = User.FindFirst("email")?.Value ?? string.Empty,
-            GivenName = User.FindFirst("given_name")?.Value ?? string.Empty,
-            FamilyName = User.FindFirst("family_name")?.Value ?? string.Empty,
-            Roles = [.. User.FindAll(ClaimTypes.Role).Select(c => c.Value)],
-            Claims = [.. User.Claims.Select(c => new ClaimInfo
-            {
-                Type = c.Type,
-                Value = c.Value
-            })]
-        };
+        var userInfo = _mapper.Map<UserInfoResponse>(User);
 
         Logger.LogInformation("User info retrieved for {Username}", userInfo.Username);
 
         await Task.CompletedTask;
         return Ok(userInfo);
     }
-
-    /// <summary>
-    /// Validate if the current token is valid
-    /// </summary>
-    /// <returns>Token validation result</returns>
-    [HttpGet("validate")]
-    [Authorize]
-    [ProducesResponseType(typeof(TokenValidationResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> ValidateToken()
-    {
-        var response = new TokenValidationResponse
-        {
-            IsValid = true,
-            Username = User.Identity?.Name ?? string.Empty,
-            ExpiresAt = User.FindFirst("exp")?.Value ?? string.Empty,
-            IssuedAt = User.FindFirst("iat")?.Value ?? string.Empty,
-            Issuer = User.FindFirst("iss")?.Value ?? string.Empty
-        };
-
-        await Task.CompletedTask;
-        return Ok(response);
-    }
-
-    /// <summary>
-    /// Logout (client-side token invalidation)
-    /// </summary>
-    /// <returns>Logout confirmation</returns>
-    [HttpPost("logout")]
-    [Authorize]
-    [ProducesResponseType(typeof(LogoutResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> Logout()
-    {
-        var username = User.Identity?.Name;
-        
-        Logger.LogInformation("User {Username} logged out (client-side)", username);
-        
-        await Task.CompletedTask;
-        return Ok(new LogoutResponse
-        {
-            Success = true,
-            Message = "Logged out successfully. Please discard your access token and refresh token."
-        });
-    }
-
-    /// <summary>
-    /// Test endpoint to check if Authorization header is received (for debugging)
-    /// </summary>
-    /// <returns>Header information</returns>
-    [HttpGet("test-auth-header")]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
-    public IActionResult TestAuthHeader()
-    {
-        var authHeader = Request.Headers.Authorization.ToString();
-        var hasAuthHeader = !string.IsNullOrEmpty(authHeader);
-        
-        Logger.LogInformation("TestAuthHeader - Authorization header present: {Present}", hasAuthHeader);
-        
-        if (hasAuthHeader)
-        {
-            Logger.LogInformation("Authorization header value (first 50 chars): {Header}", 
-                authHeader.Substring(0, Math.Min(50, authHeader.Length)));
-        }
-        
-        return Ok(new
-        {
-            HasAuthorizationHeader = hasAuthHeader,
-            AuthorizationHeaderPreview = hasAuthHeader ? authHeader.Substring(0, Math.Min(100, authHeader.Length)) + "..." : null,
-            AllHeaders = Request.Headers.Select(h => new { h.Key, Value = h.Value.ToString() }).ToList()
-        });
-    }
-
-    #region Private Methods
-
-    private async Task<HttpResponseMessage> GetKeycloakRequest(Dictionary<string, string> formData)
-    {
-        var keycloakUrl = _configuration["Keycloak:Url"];
-        var realm = _configuration["Keycloak:Realm"];
-
-        var tokenUrl = $"{keycloakUrl}/realms/{realm}/protocol/openid-connect/token";
-
-        var client = _httpClientFactory.CreateClient();
-
-        var content = new FormUrlEncodedContent(formData);
-        return await client.PostAsync(tokenUrl, content);
-    }
-
-    private async Task<(IActionResult? result, LoginResponse? tokenData)> Check(HttpResponseMessage response)
-    {
-        var tokenResponse = await response.Content.ReadAsStringAsync();
-        
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-        
-        var tokenData = JsonSerializer.Deserialize<KeycloakTokenResponse>(tokenResponse, options);
-
-        if (tokenData is null || string.IsNullOrEmpty(tokenData.AccessToken))
-        {
-            return ( 
-                GetInternalServerError("token_error", "Failed to get access token"), 
-                null
-           );
-        }
-        return (null, tokenData.Parse());
-    }
-
-    private async Task<IActionResult?> GetKeycloakResponse(HttpResponseMessage response)
-    {
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-            Logger.LogWarning("Keycloak token request failed: {StatusCode}, {Error}",
-                response.StatusCode, errorContent);
-            try
-            {
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
-                
-                var keycloakError = JsonSerializer.Deserialize<KeycloakErrorResponse>(errorContent, options);
-                return Unauthorized(GetErrorRequest(
-                    "authentication_failed",
-                    keycloakError?.ErrorDescription ?? "Invalid credentials")
-                );
-            }
-            catch
-            {
-                return Unauthorized(GetErrorRequest(
-                    "authentication_failed",
-                    "Invalid credentials"
-                ));
-            }
-        }
-        return null;
-    }
-
-    private async Task<IActionResult?> GetRefreshTokenResponse(HttpResponseMessage response)
-    {
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-            Logger.LogWarning("Keycloak refresh token request failed: {StatusCode}", response.StatusCode);
-            return Unauthorized(GetErrorRequest("invalid_grant", errorContent ?? "Invalid or expired refresh token"));
-        }
-        return null;
-    }
-
-    private Dictionary<string, string> LoginFormData(LoginRequest request)
-    {
-        return new Dictionary<string, string>
-            {
-                { "grant_type", "password" },
-                { "client_id", _configuration["Keycloak:ClientId"] ?? throw new ArgumentNullException(_configuration["Keycloak:ClientId"]) },
-                { "username", request.Username },
-                { "password", request.Password },
-                { "scope", "openid profile email roles" }
-            };
-    }
-
-    private Dictionary<string, string> RefreshTokenFormData(RefreshTokenRequest request)
-    {
-        return new Dictionary<string, string>
-            {
-                { "grant_type", "refresh_token" },
-                { "client_id", _configuration["Keycloak:ClientId"] ?? throw new ArgumentNullException(_configuration["Keycloak:ClientId"]) },
-                { "refresh_token", request.RefreshToken }
-            };
-    }
-
-    #endregion
 }
