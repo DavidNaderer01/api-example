@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace Keycloak.Swagger;
 
@@ -22,7 +22,7 @@ public static class SwaggerExtensions
                 Description = "JWT Authorization header using the Bearer scheme. Enter your JWT token in the text input below."
             });
 
-            c.OperationFilter<SwaggerSecurityRequrementsOperationFilter>();
+            c.OperationFilter<SwaggerSecurityRequirementsOperationFilter>();
         });
     }
 }

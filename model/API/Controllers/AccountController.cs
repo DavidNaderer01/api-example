@@ -1,5 +1,5 @@
 using API.Base;
-using API.Requests;
+using RequestLibrary.Requests;
 using API.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

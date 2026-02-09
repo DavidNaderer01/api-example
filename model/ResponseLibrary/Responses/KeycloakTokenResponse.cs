@@ -1,26 +1,26 @@
-using System.Text.Json.Serialization;
+namespace ResponseLibrary.Responses;
 
-namespace API.Responses;
+using System.Text.Json.Serialization;
 
 internal record KeycloakTokenResponse
 {
     [JsonPropertyName("access_token")]
-    public string AccessToken { get; init; } = string.Empty;
+    public string AccessToken { get; set; } = string.Empty;
 
     [JsonPropertyName("refresh_token")]
-    public string? RefreshToken { get; init; }
+    public string? RefreshToken { get; set; }
 
     [JsonPropertyName("token_type")]
-    public string TokenType { get; init; } = "Bearer";
+    public string TokenType { get; set; } = "Bearer";
 
     [JsonPropertyName("expires_in")]
-    public int ExpiresIn { get; init; }
+    public int ExpiresIn { get; set; }
 
     [JsonPropertyName("refresh_expires_in")]
-    public int? RefreshExpiresIn { get; init; }
+    public int? RefreshExpiresIn { get; set; }
 
     [JsonPropertyName("scope")]
-    public string? Scope { get; init; }
+    public string? Scope { get; set; }
 
     public LoginResponse Parse()
     {

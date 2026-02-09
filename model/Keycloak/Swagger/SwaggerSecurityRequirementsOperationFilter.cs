@@ -1,15 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.OpenApi;
 
 namespace Keycloak.Swagger
 {
-    public class SwaggerSecurityRequrementsOperationFilter : IOperationFilter
+    public class SwaggerSecurityRequirementsOperationFilter : IOperationFilter
     {
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
@@ -28,7 +23,7 @@ namespace Keycloak.Swagger
                     new OpenApiSecurityRequirement
                     {
                         {
-                            new OpenApiSecurityScheme
+                            new OpenApiSecuritySchemeReference
                             {
                                 Reference = new OpenApiReference
                                 {
