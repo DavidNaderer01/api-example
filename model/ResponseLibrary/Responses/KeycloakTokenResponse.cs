@@ -2,13 +2,13 @@ namespace ResponseLibrary.Responses;
 
 using System.Text.Json.Serialization;
 
-internal record KeycloakTokenResponse
+public record KeycloakTokenResponse
 {
     [JsonPropertyName("access_token")]
     public string AccessToken { get; set; } = string.Empty;
 
     [JsonPropertyName("refresh_token")]
-    public string? RefreshToken { get; set; }
+    public string RefreshToken { get; set; } = string.Empty;
 
     [JsonPropertyName("token_type")]
     public string TokenType { get; set; } = "Bearer";
@@ -20,7 +20,7 @@ internal record KeycloakTokenResponse
     public int? RefreshExpiresIn { get; set; }
 
     [JsonPropertyName("scope")]
-    public string? Scope { get; set; }
+    public string Scope { get; set; } = string.Empty;
 
     public LoginResponse Parse()
     {

@@ -21,7 +21,7 @@ public class Program
         var configuration = builder.Configuration;
         bool isDevelopment = builder.Environment.IsDevelopment();
 
-        AddServices(builder.Services, configuration);
+        AddServices(builder.Services);
         AddAuthentication(
             builder.Services, 
             configuration,
@@ -37,7 +37,6 @@ public class Program
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
             });
-            app.MapOpenApi();
         }
 
         app.UseHttpsRedirection();
@@ -74,12 +73,11 @@ public class Program
         }
     }
 
-    private static void AddServices(IServiceCollection services, ConfigurationManager configuration)
+    private static void AddServices(IServiceCollection services)
     {
         try
         {
             services.AddControllers();
-            services.AddOpenApi();
 
             services.AddEndpointsApiExplorer();
             services.AddSwaggerJwtSecurityDefinition();

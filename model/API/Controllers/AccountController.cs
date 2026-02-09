@@ -1,16 +1,15 @@
 using API.Base;
 using RequestLibrary.Requests;
-using API.Responses;
+using ResponseLibrary.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Text.Json;
-
 namespace API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AccountController : BaseController
+public class AccountController : BaseController<AccountController>
 {
     private readonly IConfiguration _configuration;
     private readonly IHttpClientFactory _httpClientFactory;
@@ -51,16 +50,16 @@ public class AccountController : BaseController
                 return errorResponse;
             }
 
-            var data = await Check(response);
+            var (result, tokenData) = await Check(response);
 
-            if (data.result is not null)
+            if (result is not null)
             {
-                return data.result;
+                return result;
             }
 
             Logger.LogInformation("User {Username} logged in successfully", request.Username);
 
-            return Ok(data.tokenData);
+            return Ok(tokenData);
         }
         catch (Exception ex)
         {
@@ -95,15 +94,15 @@ public class AccountController : BaseController
                 return errorResponse;
             }
 
-            var data = await Check(response);
-            if (data.result is not null)
+            var (result, tokenData) = await Check(response);
+            if (result is not null)
             {
-                return data.result;
+                return result;
             }
 
             Logger.LogInformation("Token refreshed successfully");
 
-            return Ok(data.tokenData);
+            return Ok(tokenData);
         }
         catch (Exception ex)
         {
@@ -121,21 +120,21 @@ public class AccountController : BaseController
     [ProducesResponseType(typeof(UserInfoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetCurrentUser()
-    {
+    {   
         var userInfo = new UserInfoResponse
         {
-            Username = User.Identity?.Name,
+            Username = User.Identity?.Name ?? string.Empty,
             IsAuthenticated = User.Identity?.IsAuthenticated ?? false,
-            AuthenticationType = User.Identity?.AuthenticationType,
-            Email = User.FindFirst("email")?.Value,
-            GivenName = User.FindFirst("given_name")?.Value,
-            FamilyName = User.FindFirst("family_name")?.Value,
-            Roles = User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList(),
-            Claims = User.Claims.Select(c => new ClaimInfo
+            AuthenticationType = User.Identity?.AuthenticationType ?? string.Empty,
+            Email = User.FindFirst("email")?.Value ?? string.Empty,
+            GivenName = User.FindFirst("given_name")?.Value ?? string.Empty,
+            FamilyName = User.FindFirst("family_name")?.Value ?? string.Empty,
+            Roles = [.. User.FindAll(ClaimTypes.Role).Select(c => c.Value)],
+            Claims = [.. User.Claims.Select(c => new ClaimInfo
             {
                 Type = c.Type,
                 Value = c.Value
-            }).ToList()
+            })]
         };
 
         Logger.LogInformation("User info retrieved for {Username}", userInfo.Username);
@@ -157,10 +156,10 @@ public class AccountController : BaseController
         var response = new TokenValidationResponse
         {
             IsValid = true,
-            Username = User.Identity?.Name,
-            ExpiresAt = User.FindFirst("exp")?.Value,
-            IssuedAt = User.FindFirst("iat")?.Value,
-            Issuer = User.FindFirst("iss")?.Value
+            Username = User.Identity?.Name ?? string.Empty,
+            ExpiresAt = User.FindFirst("exp")?.Value ?? string.Empty,
+            IssuedAt = User.FindFirst("iat")?.Value ?? string.Empty,
+            Issuer = User.FindFirst("iss")?.Value ?? string.Empty
         };
 
         await Task.CompletedTask;
@@ -188,13 +187,40 @@ public class AccountController : BaseController
         });
     }
 
+    /// <summary>
+    /// Test endpoint to check if Authorization header is received (for debugging)
+    /// </summary>
+    /// <returns>Header information</returns>
+    [HttpGet("test-auth-header")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    public IActionResult TestAuthHeader()
+    {
+        var authHeader = Request.Headers.Authorization.ToString();
+        var hasAuthHeader = !string.IsNullOrEmpty(authHeader);
+        
+        Logger.LogInformation("TestAuthHeader - Authorization header present: {Present}", hasAuthHeader);
+        
+        if (hasAuthHeader)
+        {
+            Logger.LogInformation("Authorization header value (first 50 chars): {Header}", 
+                authHeader.Substring(0, Math.Min(50, authHeader.Length)));
+        }
+        
+        return Ok(new
+        {
+            HasAuthorizationHeader = hasAuthHeader,
+            AuthorizationHeaderPreview = hasAuthHeader ? authHeader.Substring(0, Math.Min(100, authHeader.Length)) + "..." : null,
+            AllHeaders = Request.Headers.Select(h => new { h.Key, Value = h.Value.ToString() }).ToList()
+        });
+    }
+
     #region Private Methods
 
     private async Task<HttpResponseMessage> GetKeycloakRequest(Dictionary<string, string> formData)
     {
         var keycloakUrl = _configuration["Keycloak:Url"];
         var realm = _configuration["Keycloak:Realm"];
-        var clientId = _configuration["Keycloak:ClientId"];
 
         var tokenUrl = $"{keycloakUrl}/realms/{realm}/protocol/openid-connect/token";
 
@@ -207,7 +233,13 @@ public class AccountController : BaseController
     private async Task<(IActionResult? result, LoginResponse? tokenData)> Check(HttpResponseMessage response)
     {
         var tokenResponse = await response.Content.ReadAsStringAsync();
-        var tokenData = JsonSerializer.Deserialize<KeycloakTokenResponse>(tokenResponse);
+        
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        
+        var tokenData = JsonSerializer.Deserialize<KeycloakTokenResponse>(tokenResponse, options);
 
         if (tokenData is null || string.IsNullOrEmpty(tokenData.AccessToken))
         {
@@ -228,7 +260,12 @@ public class AccountController : BaseController
                 response.StatusCode, errorContent);
             try
             {
-                var keycloakError = JsonSerializer.Deserialize<KeycloakErrorResponse>(errorContent);
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                
+                var keycloakError = JsonSerializer.Deserialize<KeycloakErrorResponse>(errorContent, options);
                 return Unauthorized(GetErrorRequest(
                     "authentication_failed",
                     keycloakError?.ErrorDescription ?? "Invalid credentials")
@@ -251,7 +288,7 @@ public class AccountController : BaseController
         {
             var errorContent = await response.Content.ReadAsStringAsync();
             Logger.LogWarning("Keycloak refresh token request failed: {StatusCode}", response.StatusCode);
-            return Unauthorized(GetErrorRequest("invalid_grant", "Invalid or expired refresh token"));
+            return Unauthorized(GetErrorRequest("invalid_grant", errorContent ?? "Invalid or expired refresh token"));
         }
         return null;
     }

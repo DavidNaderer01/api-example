@@ -130,6 +130,7 @@ public static class KeycloakExtension
             .GetService<ILogger<JwtBearerHandler>>();
         
         var token = context.Request.Headers.Authorization.FirstOrDefault();
+        
         if (!string.IsNullOrEmpty(token))
         {
             var tokenValue = token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
@@ -137,8 +138,10 @@ public static class KeycloakExtension
                 : token;
             
             context.Token = tokenValue;
-            
-            logger?.LogDebug("Token received, length: {Length}", tokenValue.Length);
+        }
+        else
+        {
+            logger?.LogWarning("No Authorization header found in request!");
         }
         
         return Task.CompletedTask;
@@ -149,16 +152,16 @@ public static class KeycloakExtension
     /// </summary>
     private static Task OnTokenValidatedAsync(TokenValidatedContext context)
     {
+        var logger = context.HttpContext.RequestServices
+            .GetService<ILogger<JwtBearerHandler>>();
+        
         if (context.Principal?.Identity is ClaimsIdentity identity)
         {
-            var logger = context.HttpContext.RequestServices
-                .GetService<ILogger<JwtBearerHandler>>();
-            
             MapRealmRolesToClaims(identity, context.SecurityToken);
             
-            logger?.LogInformation("JWT Bearer authenticated: {User}, Roles: {Roles}",
-                identity.Name,
-                string.Join(", ", identity.FindAll(ClaimTypes.Role).Select(c => c.Value)));
+            var roles = identity.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
+            
+            logger?.LogInformation("JWT Bearer authenticated successfully!");
         }
         
         return Task.CompletedTask;

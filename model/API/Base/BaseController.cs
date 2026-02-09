@@ -1,18 +1,16 @@
-﻿using API.Controllers;
-using API.Responses;
+﻿using ResponseLibrary.Responses;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Base;
 
-
-public abstract class BaseController : ControllerBase
+public abstract class BaseController<T> : ControllerBase where T : ControllerBase
 {
-    private readonly ILogger<AccountController> _logger;
+    private readonly ILogger<T> _logger;
 
-    protected ILogger<AccountController> Logger => _logger;
+    protected ILogger<T> Logger => _logger;
 
     public BaseController(
-            ILogger<AccountController> logger
+            ILogger<T> logger
         )
     {
         _logger = logger;

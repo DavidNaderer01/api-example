@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace ResponseLibrary.Responses;
 
-internal record KeycloakErrorResponse
+public record KeycloakErrorResponse
 {
     [JsonPropertyName("error")] public string Error { get; set; } = string.Empty;
 

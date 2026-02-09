@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using Microsoft.OpenApi;
 
 namespace Keycloak.Swagger
 {
@@ -18,23 +18,21 @@ namespace Keycloak.Swagger
 
             if (hasAuthorize && !hasAllowAnonymous)
             {
-                operation.Security = new List<OpenApiSecurityRequirement>
-                {
-                    new OpenApiSecurityRequirement
-                    {
-                        {
-                            new OpenApiSecuritySchemeReference
+                operation.Security =
+                [
+                    new() {
+                        [
+                            new OpenApiSecurityScheme
                             {
                                 Reference = new OpenApiReference
                                 {
                                     Type = ReferenceType.SecurityScheme,
                                     Id = "Bearer"
                                 }
-                            },
-                            Array.Empty<string>()
-                        }
+                            }
+                        ] = []
                     }
-                };
+                ];
             }
         }
     }
