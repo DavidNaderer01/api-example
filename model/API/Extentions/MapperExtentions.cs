@@ -1,6 +1,4 @@
-﻿using AutoMapper;
-using Mapper.UserInfoMapping;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Mapper.UserInfoMapping;
 
 namespace API.Extentions;
 

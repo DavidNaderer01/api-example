@@ -22,15 +22,19 @@ public class Program
 
         var configuration = builder.Configuration;
         bool isDevelopment = builder.Environment.IsDevelopment();
+        bool isTesting = builder.Environment.EnvironmentName == "Testing";
 
         builder.Services.AddHostServices();
         builder.Services.AddCustomServices();
         builder.Services.AddAutoMappers();
 
-        builder.Services.AddJwtAuthentication(
-            configuration,
-            !isDevelopment
-        );
+        if (!isTesting)
+        {
+            builder.Services.AddJwtAuthentication(
+                configuration,
+                !isDevelopment
+            );
+        }
 
         var app = builder.Build();
 
