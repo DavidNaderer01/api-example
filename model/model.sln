@@ -17,8 +17,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequestLibrary", "RequestLi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResponseLibrary", "ResponseLibrary\ResponseLibrary.csproj", "{A68C8F3C-DD46-4225-AF0D-02BDB964FAA6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Startup", "Startup\Startup.csproj", "{50A88D66-323D-4B10-AA78-4FDC74691593}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mapper", "Mapper\Mapper.csproj", "{CB2EAA3C-96E8-4456-937D-37C887DF6500}"
 EndProject
 Global
@@ -55,10 +53,6 @@ Global
 		{A68C8F3C-DD46-4225-AF0D-02BDB964FAA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A68C8F3C-DD46-4225-AF0D-02BDB964FAA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A68C8F3C-DD46-4225-AF0D-02BDB964FAA6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{50A88D66-323D-4B10-AA78-4FDC74691593}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{50A88D66-323D-4B10-AA78-4FDC74691593}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{50A88D66-323D-4B10-AA78-4FDC74691593}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{50A88D66-323D-4B10-AA78-4FDC74691593}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CB2EAA3C-96E8-4456-937D-37C887DF6500}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CB2EAA3C-96E8-4456-937D-37C887DF6500}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CB2EAA3C-96E8-4456-937D-37C887DF6500}.Release|Any CPU.ActiveCfg = Release|Any CPU

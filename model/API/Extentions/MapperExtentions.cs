@@ -8,8 +8,6 @@ public static class MapperExtentions
 {
     public static void AddAutoMappers(this IServiceCollection services)
     {
-        services.AddAutoMapper(cfg => {
-            cfg.AddProfile<UserInfoMapper>();
-        });
+        services.AddAutoMapper(typeof(UserInfoMapper));
     }
 }
