@@ -24,9 +24,11 @@ public class Program
         bool isDevelopment = builder.Environment.IsDevelopment();
         bool isTesting = builder.Environment.EnvironmentName == "Testing";
 
+        builder.Services.AddSwaggerCors();
         builder.Services.AddHostServices();
         builder.Services.AddCustomServices();
         builder.Services.AddAutoMappers();
+        builder.Services.AddWebApiVersioning();
 
         if (!isTesting)
         {
@@ -49,6 +51,7 @@ public class Program
 
         app.UseHttpsRedirection();
 
+        app.UseCors("AllowSwaggerUI");
         app.UseAuthentication();
         app.UseAuthorization();
 

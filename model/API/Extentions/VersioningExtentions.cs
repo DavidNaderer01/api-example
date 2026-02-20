@@ -4,7 +4,7 @@ namespace API.Extentions;
 
 public static class VersioningExtentions
 {
-    public static IServiceCollection AddApiVersioning(this IServiceCollection services)
+    public static IServiceCollection AddWebApiVersioning(this IServiceCollection services)
     {
         services.AddApiVersioning(options =>
         {
@@ -13,11 +13,13 @@ public static class VersioningExtentions
             options.ReportApiVersions = true;
             options.ApiVersionReader = ApiVersionReader.Combine(
                 new UrlSegmentApiVersionReader(),
-                new QueryStringApiVersionReader("api-version"),
-                new HeaderApiVersionReader("X-Version"),
-                new MediaTypeApiVersionReader("X-Version"));
+                new HeaderApiVersionReader("X-Api-Version"));
         })
-            .AddMvc(options => { });
+            .AddApiExplorer(options =>
+        {
+            options.GroupNameFormat = "'v'V";
+            options.SubstituteApiVersionInUrl = true;
+        });
 
         return services;
     }

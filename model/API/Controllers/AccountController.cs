@@ -7,15 +7,15 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Text.Json;
 using Services.Account;
+using Asp.Versioning;
 
 namespace API.Controllers;
 
 [ApiController]
-[Route("api/accounts")]
+[Route("api/v{version:apiVersion}/accounts")]
+[ApiVersion("1.0")]
 public class AccountController : BaseController<AccountController>
 {
-    private readonly IConfiguration _configuration;
-    private readonly IHttpClientFactory _httpClientFactory;
     private readonly IAccountService _service;
     private readonly IMapper _mapper;
 
@@ -27,8 +27,6 @@ public class AccountController : BaseController<AccountController>
         IMapper mapper)
         : base(logger)
     {
-        _configuration = configuration;
-        _httpClientFactory = httpClientFactory;
         _service = service;
         _mapper = mapper;
     }
@@ -43,6 +41,7 @@ public class AccountController : BaseController<AccountController>
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [MapToApiVersion("1.0")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         try
@@ -77,6 +76,7 @@ public class AccountController : BaseController<AccountController>
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [MapToApiVersion("1.0")]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
         try
@@ -109,6 +109,7 @@ public class AccountController : BaseController<AccountController>
     [Authorize]
     [ProducesResponseType(typeof(UserInfoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [MapToApiVersion("1.0")]
     public async Task<IActionResult> GetCurrentUser()
     {   
         var userInfo = _mapper.Map<UserInfoResponse>(User);

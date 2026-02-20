@@ -23,6 +23,21 @@ public static class SwaggerExtensions
                 Description = "JWT Authorization header using the Bearer scheme. Enter your JWT token in the text input below."
             });
 
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            });
+
             c.OperationFilter<SwaggerSecurityRequirementsOperationFilter>();
         });
     }
