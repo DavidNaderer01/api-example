@@ -7,8 +7,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RequestLibrary.Requests;
+using ResponseLibrary.Account;
+using ResponseLibrary.Error;
 using ResponseLibrary.Keycloak;
-using ResponseLibrary.Responses;
 using Services.Account;
 using System.Security.Claims;
 
@@ -33,8 +34,6 @@ public class AccountControllerTest
 
         _controller = new AccountController(
             _mockLogger.Object,
-            _mockConfiguration.Object,
-            _mockHttpClientFactory.Object,
             _mockAccountService.Object,
             _mockMapper.Object
         );

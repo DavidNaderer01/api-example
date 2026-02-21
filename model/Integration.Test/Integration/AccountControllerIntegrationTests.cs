@@ -16,6 +16,7 @@ public class AccountControllerIntegrationTests : IClassFixture<CustomWebApplicat
 {
     private readonly HttpClient _client;
     private readonly CustomWebApplicationFactory _factory;
+    private readonly string _version = "v1";
 
     public AccountControllerIntegrationTests(CustomWebApplicationFactory factory)
     {
@@ -36,7 +37,7 @@ public class AccountControllerIntegrationTests : IClassFixture<CustomWebApplicat
             new AuthenticationHeaderValue("TestScheme", "test-token");
 
         // Act
-        var response = await _client.GetAsync("/api/accounts/me");
+        var response = await _client.GetAsync($"/api/{_version}/accounts/me");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK, 
@@ -59,7 +60,7 @@ public class AccountControllerIntegrationTests : IClassFixture<CustomWebApplicat
         // Don't set authorization header
 
         // Act
-        var response = await _client.GetAsync("/api/accounts/me");
+        var response = await _client.GetAsync($"/api/{_version}/accounts/me");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
@@ -74,7 +75,7 @@ public class AccountControllerIntegrationTests : IClassFixture<CustomWebApplicat
             new AuthenticationHeaderValue("Bearer", "invalid-token");
 
         // Act
-        var response = await _client.GetAsync("/api/accounts/me");
+        var response = await _client.GetAsync($"/api/{_version}/accounts/me");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
@@ -103,7 +104,7 @@ public class AccountControllerIntegrationTests : IClassFixture<CustomWebApplicat
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/accounts/login", loginRequest);
+        var response = await _client.PostAsJsonAsync($"/api/{_version}/accounts/login", loginRequest);
 
         // Assert
         response.StatusCode.Should().BeOneOf(
