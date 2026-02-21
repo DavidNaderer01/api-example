@@ -1,4 +1,4 @@
-namespace ResponseLibrary.Responses;
+namespace ResponseLibrary.Keycloak;
 
 public record ClaimInfo
 {

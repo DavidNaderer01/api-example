@@ -1,4 +1,4 @@
-namespace ResponseLibrary.Responses;
+namespace ResponseLibrary.Error;
 
 public record ErrorResponse
 {

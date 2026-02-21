@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ResponseLibrary.Responses;
+namespace ResponseLibrary.Keycloak;
 
 public record KeycloakErrorResponse
 {

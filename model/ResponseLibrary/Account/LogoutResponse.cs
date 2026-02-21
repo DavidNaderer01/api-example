@@ -1,4 +1,4 @@
-namespace ResponseLibrary.Responses;
+namespace ResponseLibrary.Account;
 
 public record LogoutResponse
 {

@@ -1,5 +1,6 @@
-namespace ResponseLibrary.Responses;
+namespace ResponseLibrary.Keycloak;
 
+using ResponseLibrary.Account;
 using System.Text.Json.Serialization;
 
 public record KeycloakTokenResponse

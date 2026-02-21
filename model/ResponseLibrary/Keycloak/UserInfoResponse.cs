@@ -1,9 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Security.Claims;
-using ResponseLibrary.Responses;
 
-namespace ResponseLibrary.Responses;
+namespace ResponseLibrary.Keycloak;
 
 public record UserInfoResponse
 {

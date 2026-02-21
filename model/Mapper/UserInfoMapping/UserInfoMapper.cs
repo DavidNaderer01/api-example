@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Security.Claims;
 using AutoMapper;
-using ResponseLibrary.Responses;
+using ResponseLibrary.Keycloak;
 
 namespace Mapper.UserInfoMapping
 {

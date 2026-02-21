@@ -3,7 +3,7 @@ using Keycloak.Swagger;
 using Serilog;
 using Services.Account;
 
-namespace API.Configurations;
+namespace API.Extentions;
 
 public static class ServiceExtentions
 {

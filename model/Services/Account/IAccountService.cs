@@ -1,5 +1,6 @@
 ﻿using RequestLibrary.Requests;
-using ResponseLibrary.Responses;
+using ResponseLibrary.Account;
+using ResponseLibrary.Error;
 using Services.Base.ResponseBase;
 using System;
 using System.Collections.Generic;

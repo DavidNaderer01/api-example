@@ -1,11 +1,11 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
-using ResponseLibrary.Responses;
 using RequestLibrary.Requests;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Integration.Test.Helpers;
+using ResponseLibrary.Keycloak;
 
 namespace TestProject1.Integration;
 

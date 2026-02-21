@@ -1,5 +1,4 @@
-﻿using ResponseLibrary.Responses;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace API.Base;
 

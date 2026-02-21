@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RequestLibrary.Requests;
+using ResponseLibrary.Keycloak;
 using ResponseLibrary.Responses;
 using Services.Account;
 using System.Security.Claims;

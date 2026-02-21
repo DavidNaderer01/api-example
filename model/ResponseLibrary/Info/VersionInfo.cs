@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ResponseLibrary.Responses;
+namespace ResponseLibrary.Info;
 
 public class VersionInfo
 {

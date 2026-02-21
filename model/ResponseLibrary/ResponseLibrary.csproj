@@ -6,4 +6,8 @@
     <LangVersion>13.0</LangVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Keycloak\KeycloakTokenResponse.cs~RF60373480.TMP" />
+  </ItemGroup>
+
 </Project>

@@ -1,7 +1,4 @@
-using API.Configurations;
 using API.Extentions;
-using Keycloak.Configuration;
-using Keycloak.Swagger;
 using Serilog;
 
 namespace API;

@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using RequestLibrary.Requests;
-using ResponseLibrary.Responses;
+using ResponseLibrary.Account;
+using ResponseLibrary.Error;
+using ResponseLibrary.Keycloak;
 using Services.Base.ResponseBase;
 using System;
 using System.Collections.Generic;

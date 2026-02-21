@@ -1,13 +1,13 @@
 using API.Base;
 using AutoMapper;
 using RequestLibrary.Requests;
-using ResponseLibrary.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using System.Text.Json;
 using Services.Account;
 using Asp.Versioning;
+using ResponseLibrary.Keycloak;
+using ResponseLibrary.Account;
+using ResponseLibrary.Error;
 
 namespace API.Controllers;
 
@@ -21,8 +21,6 @@ public class AccountController : BaseController<AccountController>
 
     public AccountController(
         ILogger<AccountController> logger,
-        IConfiguration configuration,
-        IHttpClientFactory httpClientFactory,
         IAccountService service,
         IMapper mapper)
         : base(logger)

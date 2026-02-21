@@ -1,4 +1,4 @@
-﻿using ResponseLibrary.Responses;
+﻿using ResponseLibrary.Error;
 using System;
 using System.Collections.Generic;
 using System.Text;
