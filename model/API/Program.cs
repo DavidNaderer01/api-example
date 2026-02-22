@@ -26,6 +26,7 @@ public class Program
         builder.Services.AddCustomServices();
         builder.Services.AddAutoMappers();
         builder.Services.AddWebApiVersioning();
+        builder.Services.AddRedisCache(configuration);
 
         if (!isTesting)
         {
@@ -47,11 +48,10 @@ public class Program
         }
 
         app.UseHttpsRedirection();
-
         app.UseCors("AllowSwaggerUI");
         app.UseAuthentication();
+        
         app.UseAuthorization();
-
         app.MapControllers();
 
         app.Run();

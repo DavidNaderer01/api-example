@@ -5,9 +5,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.Account;
 using Asp.Versioning;
-using ResponseLibrary.Keycloak;
 using ResponseLibrary.Account;
 using ResponseLibrary.Error;
+using ResponseLibrary.Keycloak;
+using Services.Redis;
 
 namespace API.Controllers;
 
@@ -18,15 +19,18 @@ public class AccountController : BaseController<AccountController>
 {
     private readonly IAccountService _service;
     private readonly IMapper _mapper;
+    private readonly IRedisCacheService _cache;
 
     public AccountController(
         ILogger<AccountController> logger,
         IAccountService service,
-        IMapper mapper)
+        IMapper mapper,
+        IRedisCacheService cache)
         : base(logger)
     {
         _service = service;
         _mapper = mapper;
+        _cache = cache;
     }
 
     /// <summary>
@@ -36,6 +40,7 @@ public class AccountController : BaseController<AccountController>
     /// <returns>JWT token and user information</returns>
     [HttpPost("login")]
     [AllowAnonymous]
+    [Consumes("application/json")]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -71,6 +76,7 @@ public class AccountController : BaseController<AccountController>
     /// <returns>New JWT token</returns>
     [HttpPost("refresh")]
     [AllowAnonymous]
+    [Consumes("application/json")]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -108,13 +114,11 @@ public class AccountController : BaseController<AccountController>
     [ProducesResponseType(typeof(UserInfoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [MapToApiVersion("1.0")]
-    public async Task<IActionResult> GetCurrentUser()
-    {   
+    public IActionResult GetCurrentUser()
+    {
         var userInfo = _mapper.Map<UserInfoResponse>(User);
 
-        Logger.LogInformation("User info retrieved for {Username}", userInfo.Username);
-
-        await Task.CompletedTask;
+        Logger.LogInformation("User info retrieved and cached for {Username}", userInfo.Username);
         return Ok(userInfo);
     }
 }

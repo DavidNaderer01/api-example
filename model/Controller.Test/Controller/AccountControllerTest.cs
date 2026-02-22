@@ -11,6 +11,7 @@ using ResponseLibrary.Account;
 using ResponseLibrary.Error;
 using ResponseLibrary.Keycloak;
 using Services.Account;
+using Services.Redis;
 using System.Security.Claims;
 
 namespace TestProject1.Controller;
@@ -22,6 +23,7 @@ public class AccountControllerTest
     private readonly Mock<IHttpClientFactory> _mockHttpClientFactory;
     private readonly Mock<IAccountService> _mockAccountService;
     private readonly Mock<IMapper> _mockMapper;
+    private readonly Mock<IRedisCacheService> _mockRedisCacheService;
     private readonly AccountController _controller;
 
     public AccountControllerTest()
@@ -31,11 +33,13 @@ public class AccountControllerTest
         _mockHttpClientFactory = new Mock<IHttpClientFactory>();
         _mockAccountService = new Mock<IAccountService>();
         _mockMapper = new Mock<IMapper>();
+        _mockRedisCacheService = new Mock<IRedisCacheService>();
 
         _controller = new AccountController(
             _mockLogger.Object,
             _mockAccountService.Object,
-            _mockMapper.Object
+            _mockMapper.Object,
+            _mockRedisCacheService.Object
         );
     }
 
