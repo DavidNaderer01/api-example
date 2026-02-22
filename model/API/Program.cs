@@ -19,7 +19,7 @@ public class Program
 
         var configuration = builder.Configuration;
         bool isDevelopment = builder.Environment.IsDevelopment();
-        bool isTesting = builder.Environment.EnvironmentName == "Testing";
+        bool isTesting = builder.Environment.EnvironmentName.Equals("Testing");
 
         builder.Services.AddSwaggerCors();
         builder.Services.AddHostServices();
